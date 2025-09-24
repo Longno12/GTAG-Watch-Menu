@@ -1,36 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Oculus.Interaction.Input;
 using UnityEngine;
 
 namespace Watch_Menu.mods
 {
     internal class NoClip
     {
-        public static bool noc = false;
+        private static bool isNoClipActive = false;
+
         public static void NoClip1()
         {
-            if (ControllerInputPoller.instance.rightControllerIndexFloat == 1f)
+            bool triggerHeldDown = (ControllerInputPoller.instance.rightControllerIndexFloat == 1f);
+            if (triggerHeldDown != isNoClipActive)
             {
-                if (noc == false)
+                isNoClipActive = triggerHeldDown;
+                bool shouldCollidersBeEnabled = !isNoClipActive;
+                foreach (MeshCollider worldCollider in Resources.FindObjectsOfTypeAll<MeshCollider>())
                 {
-                    noc = true;
-                    foreach (MeshCollider p in Resources.FindObjectsOfTypeAll<MeshCollider>())
+                    if (worldCollider != null)
                     {
-                        p.enabled = false;
-                    }
-                }
-            }
-            else
-            {
-                if (noc == true)
-                {
-                    noc = false;
-                    foreach (MeshCollider p in Resources.FindObjectsOfTypeAll<MeshCollider>())
-                    {
-                        p.enabled = true;
+                        worldCollider.enabled = shouldCollidersBeEnabled;
                     }
                 }
             }
