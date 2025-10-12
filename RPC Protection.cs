@@ -26,16 +26,17 @@ public static class RPCProtection
                 if (ev.Sender == Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber) return;
                 if (ev.Code == 199 || ev.Code <= 5)
                 {
-                    UnityEngine.Debug.LogWarning($"[SimpleRPCProtection] Blocked event {ev.Code} from {ev.Sender}");
+                    UnityEngine.Debug.LogWarning($"Blocked event {ev.Code} from {ev.Sender}");
                 }
             };
 
             enabled = true;
-            UnityEngine.Debug.Log("<color=limeRPC Protection Enabled</color>");
+            UnityEngine.Debug.Log("<color=Protection Enabled</color>");
         }
         catch (Exception ex)
         {
-            UnityEngine.Debug.LogError("[SimpleRPCProtection] Error: " + ex);
+            UnityEngine.Debug.LogError("Error: " + ex);
         }
     }
 }
+
