@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using HarmonyLib;
 using Photon.Pun;
 using UnityEngine;
@@ -54,7 +54,8 @@ namespace Watch1
             "Sticky Platforms",
             "NOCLIP",
             "FLY",
-            "RPC Protection"
+            "RPC Protection",
+            "Grab Rig"
         };
 
                 if (WatchCreditPage)
@@ -75,6 +76,7 @@ namespace Watch1
                             case 3: WatchMod3 = !WatchMod3; break;
                             case 4: WatchMod4 = !WatchMod4; break;
                             case 5: WatchMod5 = !WatchMod5; break;
+                            case 6: WatchMod6 = !WatchMod6; break;
                         }
 
                         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(64, true, 0.8f);
@@ -119,27 +121,18 @@ namespace Watch1
         }
 
         public static float Cooldown { get; private set; }
-
         public static bool PagesMove = true;
-
         public static bool WatchCreditPage;
-
         public static bool WatchMod1;
-
         public static bool WatchMod2;
-
         public static bool WatchMod3;
-
         public static bool WatchMod4;
-
         public static bool WatchMod5;
+        public static bool WatchMod6;
 
         public static int PageNumber;
-
         public static int MaxPage = 5;
-
-        public static string MenuTitle = "Encryptic Watch       V1.0";
-
+        public static string MenuTitle = "Encryptic Watch";
         public static Color WatchTextColor = Color.aliceBlue;
 
         public enum PhotonEventCodes
