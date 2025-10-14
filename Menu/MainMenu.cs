@@ -1,8 +1,9 @@
-using System;
-using HarmonyLib;
+﻿using HarmonyLib;
 using Photon.Pun;
+using System;
 using UnityEngine;
 using Watch_Menu.mods;
+using static QRCoder.PayloadGenerator;
 
 namespace Watch1
 {
@@ -44,20 +45,24 @@ namespace Watch1
                     }
                 }
 
-                if (PageNumber > MaxPage) PageNumber = 0;
-                if (PageNumber < 0) PageNumber = MaxPage;
-
                 string[] pageTitles =
                 {
-            MenuTitle,
-            "Disconnect",
-            "Sticky Platforms",
-            "NOCLIP",
-            "FLY",
-            "RPC Protection",
-            "Grab Rig"
-        };
+                    MenuTitle,
+                    "Disconnect",
+                    "Sticky Platforms",
+                    "NOCLIP",
+                    "FLY",
+                    "RPC Protection",
+                    "Grab Rig"
 
+                    // NEW LINE FOR Mod Names
+                };
+
+                // automatically detect number of pages
+                MaxPage = pageTitles.Length - 1;
+
+                if (PageNumber > MaxPage) PageNumber = 0;
+                if (PageNumber < 0) PageNumber = MaxPage;
                 if (WatchCreditPage)
                 {
                     PagesMove = false;
@@ -66,7 +71,18 @@ namespace Watch1
                 else
                 {
                     PagesMove = true;
-                    huntComp.text.text = pageTitles[PageNumber] + (PageNumber == 0 ? "" : $"   ({(PageNumber == 1 ? WatchMod1 : PageNumber == 2 ? WatchMod2 : PageNumber == 3 ? WatchMod3 : WatchMod4)})");
+                    bool currentState = false;
+                    if (PageNumber == 1) currentState = WatchMod1;
+                    else if (PageNumber == 2) currentState = WatchMod2;
+                    else if (PageNumber == 3) currentState = WatchMod3;
+                    else if (PageNumber == 4) currentState = WatchMod4;
+                    else if (PageNumber == 5) currentState = WatchMod5;
+                    else if (PageNumber == 6) currentState = WatchMod6;
+                    // NEW LINE FOR EACH PAGE
+
+
+                    huntComp.text.text = pageTitles[PageNumber] + (PageNumber == 0 ? "" : $"   ({currentState})");
+
                     if (PageNumber > 0 && ControllerInputPoller.instance.leftControllerSecondaryButton && Time.time > Cooldown + 0.5f)
                     {
                         switch (PageNumber)
@@ -77,6 +93,7 @@ namespace Watch1
                             case 4: WatchMod4 = !WatchMod4; break;
                             case 5: WatchMod5 = !WatchMod5; break;
                             case 6: WatchMod6 = !WatchMod6; break;
+                            // NEW LINE FOR EACH PAGE
                         }
 
                         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(64, true, 0.8f);
@@ -113,6 +130,10 @@ namespace Watch1
                 {
                     RPCProtection.Enable();
                 }
+                if (WatchMod6)
+                {
+                    Grab_Rig.GrabRig();
+                }
             }
             catch (Exception ex)
             {
@@ -129,9 +150,8 @@ namespace Watch1
         public static bool WatchMod4;
         public static bool WatchMod5;
         public static bool WatchMod6;
-
         public static int PageNumber;
-        public static int MaxPage = 5;
+        public static int MaxPage;
         public static string MenuTitle = "Encryptic Watch";
         public static Color WatchTextColor = Color.aliceBlue;
 

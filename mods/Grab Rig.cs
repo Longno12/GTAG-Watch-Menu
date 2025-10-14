@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,28 +10,26 @@ namespace Watch_Menu.mods
 {
     internal class Grab_Rig
     {
-        public static bool Exceptions = false;
-        public static bool stuff = false;
-        public static float laggyDelay;
-        public static void LaggyRig()
+        private static Vector3 initialRigPosition;
+        private static bool isGrabbing = false;
+        public static void GrabRig()
         {
-            Exceptions = true;
-            if (Time.time > laggyDelay)
+
+            if (ControllerInputPoller.instance.rightGrab)
             {
-                GorillaTagger.Instance.offlineVRRig.enabled = true;
-                stuff = true;
-                laggyDelay = Time.time + 0.5f;
-            }
-            else
-            {
-                if (stuff)
+                if (!isGrabbing)
                 {
-                    stuff = false;
-                }
-                else
-                {
+                    isGrabbing = true;
+                    initialRigPosition = GorillaTagger.Instance.offlineVRRig.transform.position;
                     GorillaTagger.Instance.offlineVRRig.enabled = false;
                 }
+                GorillaTagger.Instance.offlineVRRig.transform.position = GorillaLocomotion.GTPlayer.Instance.rightControllerTransform.position;
+            }
+            else if (isGrabbing)
+            {
+                isGrabbing = false;
+                GorillaTagger.Instance.offlineVRRig.transform.position = initialRigPosition;
+                GorillaTagger.Instance.offlineVRRig.enabled = true;
             }
         }
     }
