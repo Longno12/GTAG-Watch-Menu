@@ -1,9 +1,9 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using Photon.Pun;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Watch_Menu.mods;
-using static QRCoder.PayloadGenerator;
 
 namespace Watch1
 {
@@ -11,15 +11,34 @@ namespace Watch1
     [HarmonyPatch("LateUpdate", MethodType.Normal)]
     internal class Watch : MonoBehaviour
     {
+        public class ModPage
+        {
+            public string Name;
+            public bool IsEnabled;
+            public bool IsOneShot; // For mods that run once and turn off, like Disconnect.
+            public Action ActionToRun;
+        }
+
+        // TO ADD A NEW MOD, JUST ADD A NEW LINE TO THIS LIST.
+        private static readonly List<ModPage> modPages = new List<ModPage>
+        {
+            new ModPage { Name = "Disconnect",       IsEnabled = false, IsOneShot = true,  ActionToRun = () => PhotonNetwork.Disconnect() },
+            new ModPage { Name = "Sticky Platforms", IsEnabled = false, IsOneShot = false, ActionToRun = StickyPlatforms.StickyPlatforms1 },
+            new ModPage { Name = "NOCLIP",           IsEnabled = false, IsOneShot = false, ActionToRun = NoClip.NoClip1 },
+            new ModPage { Name = "FLY",              IsEnabled = false, IsOneShot = false, ActionToRun = Fly.Fly1 },
+            new ModPage { Name = "RPC Protection",   IsEnabled = false, IsOneShot = false, ActionToRun = RPCProtection.Enable },
+            new ModPage { Name = "Grab Rig",         IsEnabled = false, IsOneShot = false, ActionToRun = Grab_Rig.GrabRig },
+            new ModPage { Name = "Size Changer",         IsEnabled = false, IsOneShot = false, ActionToRun = Size_Changer.SizeChanger },
+            // Example: new ModPage { Name = "My New Mod", IsEnabled = false, IsOneShot = false, ActionToRun = MyNewMod.Run },
+        };
 
         private static void Prefix()
         {
             try
             {
-                var huntCompObj = GorillaTagger.Instance.offlineVRRig.huntComputer;
-                var huntComp = huntCompObj.GetComponent<GorillaHuntComputer>();
+                var huntComp = GorillaTagger.Instance.offlineVRRig.huntComputer.GetComponent<GorillaHuntComputer>();
                 GorillaTagger.Instance.offlineVRRig.EnableHuntWatch(true);
-                huntCompObj.SetActive(true);
+                huntComp.gameObject.SetActive(true);
                 huntComp.material.gameObject.SetActive(false);
                 huntComp.face.gameObject.SetActive(false);
                 huntComp.badge.gameObject.SetActive(false);
@@ -44,25 +63,10 @@ namespace Watch1
                         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(66, false, 0.8f);
                     }
                 }
+                int maxPage = modPages.Count;
+                if (PageNumber > maxPage) PageNumber = 0;
+                if (PageNumber < 0) PageNumber = maxPage;
 
-                string[] pageTitles =
-                {
-                    MenuTitle,
-                    "Disconnect",
-                    "Sticky Platforms",
-                    "NOCLIP",
-                    "FLY",
-                    "RPC Protection",
-                    "Grab Rig"
-
-                    // NEW LINE FOR Mod Names
-                };
-
-                // automatically detect number of pages
-                MaxPage = pageTitles.Length - 1;
-
-                if (PageNumber > MaxPage) PageNumber = 0;
-                if (PageNumber < 0) PageNumber = MaxPage;
                 if (WatchCreditPage)
                 {
                     PagesMove = false;
@@ -71,97 +75,61 @@ namespace Watch1
                 else
                 {
                     PagesMove = true;
-                    bool currentState = false;
-                    if (PageNumber == 1) currentState = WatchMod1;
-                    else if (PageNumber == 2) currentState = WatchMod2;
-                    else if (PageNumber == 3) currentState = WatchMod3;
-                    else if (PageNumber == 4) currentState = WatchMod4;
-                    else if (PageNumber == 5) currentState = WatchMod5;
-                    else if (PageNumber == 6) currentState = WatchMod6;
-                    // NEW LINE FOR EACH PAGE
-
-
-                    huntComp.text.text = pageTitles[PageNumber] + (PageNumber == 0 ? "" : $"   ({currentState})");
-
-                    if (PageNumber > 0 && ControllerInputPoller.instance.leftControllerSecondaryButton && Time.time > Cooldown + 0.5f)
+                    if (PageNumber == 0)
                     {
-                        switch (PageNumber)
-                        {
-                            case 1: WatchMod1 = !WatchMod1; break;
-                            case 2: WatchMod2 = !WatchMod2; break;
-                            case 3: WatchMod3 = !WatchMod3; break;
-                            case 4: WatchMod4 = !WatchMod4; break;
-                            case 5: WatchMod5 = !WatchMod5; break;
-                            case 6: WatchMod6 = !WatchMod6; break;
-                            // NEW LINE FOR EACH PAGE
-                        }
-
-                        GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(64, true, 0.8f);
-                        GorillaTagger.Instance.StartVibration(true, GorillaTagger.Instance.tagHapticStrength / 2f, GorillaTagger.Instance.tagHapticDuration / 2f);
-                        Cooldown = Time.time;
+                        huntComp.text.text = MenuTitle;
                     }
-                    else if (PageNumber == 0 && ControllerInputPoller.instance.leftControllerSecondaryButton && Time.time > Cooldown + 0.5f)
+                    else
+                    {
+                        ModPage currentMod = modPages[PageNumber - 1];
+                        huntComp.text.text = $"{currentMod.Name}   ({currentMod.IsEnabled})";
+                    }
+                }
+
+                if (ControllerInputPoller.instance.leftControllerSecondaryButton && Time.time > Cooldown + 0.5f)
+                {
+                    if (PageNumber == 0)
                     {
                         WatchCreditPage = !WatchCreditPage;
-
                         GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(20, true, 0.8f);
-                        GorillaTagger.Instance.StartVibration(true, GorillaTagger.Instance.tagHapticStrength / 2f, GorillaTagger.Instance.tagHapticDuration / 2f);
-                        Cooldown = Time.time;
                     }
+                    else
+                    {
+                        ModPage currentMod = modPages[PageNumber - 1];
+                        currentMod.IsEnabled = !currentMod.IsEnabled;
+
+                        if (currentMod.IsEnabled && currentMod.IsOneShot)
+                        {
+                            currentMod.ActionToRun?.Invoke();
+                            currentMod.IsEnabled = false;
+                        }
+                        GorillaTagger.Instance.offlineVRRig.PlayHandTapLocal(64, true, 0.8f);
+                    }
+
+                    GorillaTagger.Instance.StartVibration(true, GorillaTagger.Instance.tagHapticStrength / 2f, GorillaTagger.Instance.tagHapticDuration / 2f);
+                    Cooldown = Time.time;
                 }
-                if (WatchMod1)
+
+                foreach (var mod in modPages)
                 {
-                    PhotonNetwork.Disconnect();
-                    WatchMod1 = false;
-                }
-                if (WatchMod2)
-                {
-                    StickyPlatforms.StickyPlatforms1();
-                }
-                if (WatchMod3)
-                {
-                    NoClip.NoClip1();
-                }
-                if (WatchMod4)
-                {
-                    Fly.Fly1();
-                }
-                if (WatchMod5)
-                {
-                    RPCProtection.Enable();
-                }
-                if (WatchMod6)
-                {
-                    Grab_Rig.GrabRig();
+                    if (mod.IsEnabled && !mod.IsOneShot)
+                    {
+                        mod.ActionToRun?.Invoke();
+                    }
                 }
             }
             catch (Exception ex)
             {
-                UnityEngine.Debug.LogError("Watch Prefix Error: " + ex);
+                Debug.LogError("Watch Prefix Error: " + ex);
             }
         }
 
         public static float Cooldown { get; private set; }
         public static bool PagesMove = true;
         public static bool WatchCreditPage;
-        public static bool WatchMod1;
-        public static bool WatchMod2;
-        public static bool WatchMod3;
-        public static bool WatchMod4;
-        public static bool WatchMod5;
-        public static bool WatchMod6;
         public static int PageNumber;
-        public static int MaxPage;
         public static string MenuTitle = "Encryptic Watch";
         public static Color WatchTextColor = Color.aliceBlue;
-
-        public enum PhotonEventCodes
-        {
-            left_jump_photoncode = 69,
-            right_jump_photoncode,
-            left_jump_deletion,
-            right_jump_deletion
-        }
 
         public class TimedBehaviour : MonoBehaviour
         {
@@ -195,19 +163,14 @@ namespace Watch1
             }
 
             public bool complete = false;
-
             public bool loop = true;
-
             public float progress = 0f;
-
             protected bool paused = false;
-
             protected float startTime;
-
             protected float duration = 2f;
         }
 
-        public class ColorChanger : Watch.TimedBehaviour
+        public class ColorChanger : TimedBehaviour
         {
             public override void Start()
             {
@@ -230,11 +193,8 @@ namespace Watch1
             }
 
             public Renderer gameObjectRenderer;
-
             public Gradient colors = null;
-
             public Color color;
-
             public bool timeBased = true;
         }
     }
