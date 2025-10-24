@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using System.Reflection;
 
 namespace Watch_Menu.mods
 {
@@ -12,23 +7,30 @@ namespace Watch_Menu.mods
     {
         public static void SizeChanger()
         {
-            float sizeScale = GorillaTagger.Instance.offlineVRRig.NativeScale;
-            float increment = 0.1f;
+            float scaleChange = 0.1f;
+            float minScale = 0.05f;
+            var rig = GorillaTagger.Instance.offlineVRRig;
+            float currentScale = rig.NativeScale;
             if (ControllerInputPoller.instance.leftGrab)
             {
-                sizeScale -= increment;
+                currentScale -= scaleChange;
             }
             if (ControllerInputPoller.instance.rightGrab)
             {
-                sizeScale += increment;
+                currentScale += scaleChange;
             }
-            if (sizeScale < 0.05f)
+            if (currentScale < minScale)
             {
-                sizeScale = 0.05f;
+                currentScale = minScale;
             }
-            GorillaTagger.Instance.offlineVRRig.transform.localScale = Vector3.one * sizeScale;
-            GorillaTagger.Instance.offlineVRRig.NativeScale = sizeScale;
-            typeof(GorillaLocomotion.GTPlayer).GetField("nativeScale", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(GorillaLocomotion.GTPlayer.Instance, sizeScale);
+            rig.transform.localScale = Vector3.one * currentScale;
+            rig.NativeScale = currentScale;
+            var playerType = typeof(GorillaLocomotion.GTPlayer);
+            var scaleField = playerType.GetField("nativeScale", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (scaleField != null)
+            {
+                scaleField.SetValue(GorillaLocomotion.GTPlayer.Instance, currentScale);
+            }
         }
     }
 }
