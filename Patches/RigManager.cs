@@ -1,4 +1,9 @@
-﻿using Photon.Realtime;
+
+// Using old Rig Manager from  https://github.com/iiDk-the-actual/iis.Stupid.Template/blob/master/Classes/RigManager.cs
+
+
+
+using Photon.Realtime;
 using Photon.Pun;
 using BepInEx;
 using HarmonyLib;
@@ -204,4 +209,5 @@ namespace StupidTemplate.Classes
             return (NetworkView)Traverse.Create(p).Field("netView").GetValue();
         }
     }
+
 }
