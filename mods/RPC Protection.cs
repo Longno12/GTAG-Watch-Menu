@@ -1,43 +1,46 @@
-﻿using System;
+using System;
+using Photon.Pun;
+using Photon.Realtime;
+using UnityEngine;
 
 public static class RPCProtection
 {
-    private static bool enabled = false;
+    private static bool isActive;
 
     public static void Enable()
     {
-        if (enabled) return;
-
+        if (isActive) return;
         try
         {
-            if (!Photon.Pun.PhotonNetwork.InRoom || Photon.Pun.PhotonNetwork.LocalPlayer == null)
-                return;
-            var rig = GorillaTagger.Instance?.myVRRig;
+            if (!PhotonNetwork.InRoom || PhotonNetwork.LocalPlayer == null) return;
+            var rig = GorillaTagger.Instance != null ? GorillaTagger.Instance.myVRRig : null;
             if (rig != null)
             {
-                var pv = rig.GetComponent<Photon.Pun.PhotonView>();
-                if (pv != null && pv.IsMine)
+                var view = rig.GetComponent<PhotonView>();
+                if (view != null && view.IsMine)
                 {
-                    Photon.Pun.PhotonNetwork.OpCleanRpcBuffer(pv);
-                    Photon.Pun.PhotonNetwork.RemoveBufferedRPCs(pv.ViewID);
-                    Photon.Pun.PhotonNetwork.CleanRpcBufferIfMine(pv);
+                    PhotonNetwork.OpCleanRpcBuffer(view);
+                    PhotonNetwork.RemoveBufferedRPCs(view.ViewID);
+                    PhotonNetwork.CleanRpcBufferIfMine(view);
                 }
             }
-            Photon.Pun.PhotonNetwork.NetworkingClient.EventReceived += (ev) =>
-            {
-                if (ev.Sender == Photon.Pun.PhotonNetwork.LocalPlayer.ActorNumber) return;
-                if (ev.Code == 199 || ev.Code <= 5)
-                {
-                    UnityEngine.Debug.LogWarning($"[SimpleRPCProtection] Blocked event {ev.Code} from {ev.Sender}");
-                }
-            };
-
-            enabled = true;
-            UnityEngine.Debug.Log("<color=limeRPC Protection Enabled</color>");
+            PhotonNetwork.NetworkingClient.EventReceived += OnPhotonEvent;
+            isActive = true;
+            Debug.Log("<color=lime>RPC Protection Activated</color>");
         }
-        catch (Exception ex)
+        catch (Exception err)
         {
-            UnityEngine.Debug.LogError("[SimpleRPCProtection] Error: " + ex);
+            Debug.LogError("[RPCProtector] Exception: " + err.Message);
+        }
+    }
+
+    private static void OnPhotonEvent(ExitGames.Client.Photon.EventData eventData)
+    {
+        if (eventData.Sender == PhotonNetwork.LocalPlayer.ActorNumber) return;
+        byte code = eventData.Code;
+        if (code == 199 || code <= 5)
+        {
+            Debug.LogWarning($"[RPCProtector] Blocked Photon event ({code}) from sender {eventData.Sender}");
         }
     }
 }
