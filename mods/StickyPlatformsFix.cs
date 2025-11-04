@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class StickyPlatforms : MonoBehaviour
 {
@@ -13,9 +13,15 @@ public class StickyPlatforms : MonoBehaviour
 
     public static void StickyPlatforms1()
     {
-        HandleHand( ref leftplat, ControllerInputPoller.instance.leftGrab, GorillaTagger.Instance.leftHandTransform, GorillaLocomotion.GTPlayer.Instance.leftHandOffset, GorillaLocomotion.GTPlayer.Instance.leftHandRotOffset);
-        HandleHand(ref rightplat, ControllerInputPoller.instance.rightGrab, GorillaTagger.Instance.rightHandTransform, GorillaLocomotion.GTPlayer.Instance.rightHandOffset, GorillaLocomotion.GTPlayer.Instance.rightHandRotOffset);
+        Transform leftController = GorillaLocomotion.GTPlayer.Instance.GetControllerTransform(true);
+        Transform rightController = GorillaLocomotion.GTPlayer.Instance.GetControllerTransform(false);
+
+        HandleHand( ref leftplat, ControllerInputPoller.instance.leftGrab, GorillaTagger.Instance.leftHandTransform, leftController.position, Quaternion.identity );
+
+        HandleHand( ref rightplat, ControllerInputPoller.instance.rightGrab, GorillaTagger.Instance.rightHandTransform, rightController.position, Quaternion.identity );
     }
+
+
 
     private static void HandleHand(ref GameObject platform, bool isGrabbing, Transform handTransform, Vector3 positionOffset, Quaternion rotationOffset)
     {
